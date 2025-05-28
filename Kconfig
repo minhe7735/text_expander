@@ -1,0 +1,38 @@
+config ZMK_TEXT_EXPANDER
+    bool "Enable text expander behavior"
+    default n
+    help
+      Enable text expansion functionality that allows short codes
+      to be expanded into longer text strings.
+
+if ZMK_TEXT_EXPANDER
+
+config ZMK_TEXT_EXPANDER_MAX_EXPANSIONS
+    int "Maximum number of expansion pairs"
+    default 32
+    range 1 128
+    help
+      Maximum number of short/expanded text pairs that can be stored.
+
+config ZMK_TEXT_EXPANDER_MAX_SHORT_LEN
+    int "Maximum short code length"
+    default 16
+    range 4 32
+    help
+      Maximum length for short codes.
+
+config ZMK_TEXT_EXPANDER_MAX_EXPANDED_LEN
+    int "Maximum expanded text length"
+    default 128
+    range 16 512
+    help
+      Maximum length for expanded text.
+
+config ZMK_TEXT_EXPANDER_TYPING_DELAY
+    int "Delay between keystrokes in milliseconds"
+    default 10
+    range 1 100
+    help
+      Delay between individual keystrokes when typing expanded text.
+
+endif # ZMK_TEXT_EXPANDER

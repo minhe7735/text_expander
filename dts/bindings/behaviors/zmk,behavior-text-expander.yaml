@@ -1,0 +1,5 @@
+description: Text expander behavior for ZMK
+
+compatible: "zmk,behavior-text-expander"
+
+include: zero_param.yaml
