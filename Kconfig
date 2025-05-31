@@ -7,6 +7,34 @@ config ZMK_TEXT_EXPANDER
 
 if ZMK_TEXT_EXPANDER
 
+config ZMK_TEXT_EXPANDER_AGGRESSIVE_RESET_MODE
+    bool "Enable aggressive reset mode for text expander"
+    default n
+    help
+      If enabled, the currently typed short code will be reset
+      if it does not form a valid prefix of any defined short code
+      in the trie. The default behavior (when this is disabled)
+      allows typing sequences that are not prefixes and only resets
+      on specific keys like space or other non-alphanumeric/non-modifier keys.
+
+config ZMK_TEXT_EXPANDER_RESET_ON_ENTER
+    bool "Reset current short code on Enter key press"
+    default n
+    help
+      If enabled, pressing the Enter key will reset the current
+      text expander short code buffer if it does not trigger an expansion
+      and aggressive reset mode (if active) hasn't already reset it.
+      By default, Enter does not reset the buffer.
+
+config ZMK_TEXT_EXPANDER_RESET_ON_TAB
+    bool "Reset current short code on Tab key press"
+    default n
+    help
+      If enabled, pressing the Tab key will reset the current
+      text expander short code buffer if it does not trigger an expansion
+      and aggressive reset mode (if active) hasn't already reset it.
+      By default, Tab does not reset the buffer.
+
 config ZMK_TEXT_EXPANDER_MAX_EXPANSIONS
     int "Maximum number of expansion pairs"
     default 32
