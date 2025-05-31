@@ -1,5 +1,22 @@
 description: Text expander behavior for ZMK
-
 compatible: "zmk,behavior-text-expander"
-
 include: zero_param.yaml
+
+child-binding:
+  description: |
+    Text expansion definition. Each child node defines a short code and
+    its corresponding expanded text.
+    
+  properties:
+    short_code:
+      type: string
+      required: true
+      description: |
+        The short code that will trigger the expansion. Must contain only
+        lowercase letters (a-z) and numbers (0-9).
+        
+    expanded_text:
+      type: string  
+      required: true
+      description: |
+        The text that the short code will expand to.
