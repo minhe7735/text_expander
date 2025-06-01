@@ -66,10 +66,27 @@ static void add_to_current_short(char c) {
     strncpy(temp_buffer, expander_data.current_short, MAX_SHORT_LEN - 1);
     temp_buffer[MAX_SHORT_LEN - 1] = '\0';
 
-    LOG_WRN("Current short code buffer full ('%s', len %d). Resetting before adding '%c'. Max "
-            "len: %d",
-            temp_buffer, expander_data.current_short_len, c, MAX_SHORT_LEN - 1);
+    if (IS_ENABLED(CONFIG_ZMK_TEXT_EXPANDER_RESTART_AFTER_RESET_WITH_TRIGGER_CHAR)) {
+        LOG_WRN("Current short code buffer full ('%s', len %d). Resetting. Will attempt to start new short with '%c'. Max len: %d",
+                temp_buffer, expander_data.current_short_len, c, MAX_SHORT_LEN - 1);
+    } else {
+        LOG_WRN("Current short code buffer full ('%s', len %d). Resetting. Character '%c' will be discarded. Max len: %d",
+                temp_buffer, expander_data.current_short_len, c, MAX_SHORT_LEN - 1);
+    }
+    
     reset_current_short();
+
+    if (IS_ENABLED(CONFIG_ZMK_TEXT_EXPANDER_RESTART_AFTER_RESET_WITH_TRIGGER_CHAR)) {
+        if (MAX_SHORT_LEN > 1) { 
+          expander_data.current_short[expander_data.current_short_len++] = c;
+          expander_data.current_short[expander_data.current_short_len] = '\0';
+          LOG_DBG("Started new short with '%c' after buffer full reset. Current short: '%s', len: %d",
+                  c, expander_data.current_short, expander_data.current_short_len);
+        } else {
+          LOG_ERR("Cannot start new short with '%c' after buffer full reset, MAX_SHORT_LEN (%d) is too small.", 
+                  c, MAX_SHORT_LEN);
+        }
+    }
   }
 }
 
@@ -191,18 +208,20 @@ static int text_expander_keycode_state_changed_listener(const zmk_event_t *eh) {
 
   uint16_t keycode = ev->keycode;
   bool current_short_content_changed = false;
+  char char_that_caused_change = 0; 
 
   if (keycode >= HID_USAGE_KEY_KEYBOARD_A && keycode <= HID_USAGE_KEY_KEYBOARD_Z) {
-    char c = 'a' + (keycode - HID_USAGE_KEY_KEYBOARD_A);
-    add_to_current_short(c);
+    char_that_caused_change = 'a' + (keycode - HID_USAGE_KEY_KEYBOARD_A); 
+    add_to_current_short(char_that_caused_change); 
     current_short_content_changed = true;
   } else if (keycode >= HID_USAGE_KEY_KEYBOARD_1_AND_EXCLAMATION &&
              keycode <= HID_USAGE_KEY_KEYBOARD_9_AND_LEFT_PARENTHESIS) {
-    char c = '1' + (keycode - HID_USAGE_KEY_KEYBOARD_1_AND_EXCLAMATION);
-    add_to_current_short(c);
+    char_that_caused_change = '1' + (keycode - HID_USAGE_KEY_KEYBOARD_1_AND_EXCLAMATION); 
+    add_to_current_short(char_that_caused_change); 
     current_short_content_changed = true;
   } else if (keycode == HID_USAGE_KEY_KEYBOARD_0_AND_RIGHT_PARENTHESIS) {
-    add_to_current_short('0');
+    char_that_caused_change = '0'; 
+    add_to_current_short(char_that_caused_change); 
     current_short_content_changed = true;
   } else if (keycode == HID_USAGE_KEY_KEYBOARD_DELETE_BACKSPACE) {
     if (expander_data.current_short_len > 0) {
@@ -215,14 +234,21 @@ static int text_expander_keycode_state_changed_listener(const zmk_event_t *eh) {
   }
 
   if (IS_ENABLED(CONFIG_ZMK_TEXT_EXPANDER_AGGRESSIVE_RESET_MODE)) {
-    if (current_short_content_changed && expander_data.current_short_len > 0) {
+    if (current_short_content_changed && char_that_caused_change != 0 && expander_data.current_short_len > 0) {
       struct trie_node *node =
           trie_get_node_for_key(expander_data.root, expander_data.current_short);
       if (node == NULL) {
-        LOG_DBG("Aggressive reset: '%s' is not a prefix of any known short code. Resetting.",
-                expander_data.current_short);
-        reset_current_short();
-        current_short_content_changed = false;
+        if (IS_ENABLED(CONFIG_ZMK_TEXT_EXPANDER_RESTART_AFTER_RESET_WITH_TRIGGER_CHAR)) {
+            LOG_DBG("Aggressive reset: '%s' is not a prefix. Resetting and starting new with '%c'.",
+                    expander_data.current_short, char_that_caused_change);
+            reset_current_short();
+            add_to_current_short(char_that_caused_change); 
+        } else {
+            LOG_DBG("Aggressive reset: '%s' is not a prefix of any known short code. Resetting.",
+                    expander_data.current_short); 
+            reset_current_short();
+        }
+        current_short_content_changed = false; 
       }
     }
   }

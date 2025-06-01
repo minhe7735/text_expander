@@ -7,6 +7,15 @@ config ZMK_TEXT_EXPANDER
 
 if ZMK_TEXT_EXPANDER
 
+config ZMK_TEXT_EXPANDER_RESTART_AFTER_RESET_WITH_TRIGGER_CHAR
+   bool "Restart short code with triggering char after certain resets"
+   default n
+   help
+     If enabled, when an alphanumeric character triggers an aggressive
+     reset or a reset due to the buffer being full, that character
+     will be used to start the new short code. Otherwise, the buffer
+     will simply be cleared and the character discarded.
+
 config ZMK_TEXT_EXPANDER_AGGRESSIVE_RESET_MODE
     bool "Enable aggressive reset mode for text expander"
     default n
